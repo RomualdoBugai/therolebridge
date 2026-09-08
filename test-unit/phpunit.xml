@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="../vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="bootstrap.php"
+         colors="true"
+         stopOnFailure="false">
+    <testsuites>
+        <testsuite name="jobs">
+            <file>HelperFunctionsTest.php</file>
+            <file>ProviderAdapterTest.php</file>
+            <file>ProviderDbTest.php</file>
+            <file>JobsPageTest.php</file>
+            <file>JobsOutPageTest.php</file>
+            <file>FetchUnifiedJobsTest.php</file>
+        </testsuite>
+    </testsuites>
+</phpunit>

@@ -1,0 +1,10 @@
+.env
+logs/
+cache/
+.phpunit.result.cache
+
+// just local testing
+vendor/
+composer.lock
+Dockerfile
+assets/.DS_Store
