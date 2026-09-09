@@ -168,9 +168,9 @@ require_once __DIR__ . '/includes/functions.php';
     <div class="container-fluid relative">
         <div class="grid grid-cols-1">
             <div class="w-full leading-0 border-0">
-                <!-- Mapa focado em Charlotte, NC (pode trocar depois se quiser um endereço específico) -->
+                <!-- Mapa focado em Boston, MA -->
                 <iframe
-                    src="https://www.google.com/maps?q=Charlotte,+North+Carolina&output=embed"
+                    src="https://www.google.com/maps?q=Boston,+Massachusetts&output=embed"
                     style="border:0"
                     class="w-full h-125"
                     allowfullscreen>
