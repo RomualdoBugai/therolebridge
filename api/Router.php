@@ -12,32 +12,33 @@ class Router
         $this->request = $request;
     }
 
-    public function get(string $path, array $handler, bool $auth = true): void
+    public function get(string $path, array $handler, ?string $ability = null, bool $auth = true): void
     {
-        $this->addRoute('GET', $path, $handler, $auth);
+        $this->addRoute('GET', $path, $handler, $ability, $auth);
     }
 
-    public function post(string $path, array $handler, bool $auth = true): void
+    public function post(string $path, array $handler, ?string $ability = null, bool $auth = true): void
     {
-        $this->addRoute('POST', $path, $handler, $auth);
+        $this->addRoute('POST', $path, $handler, $ability, $auth);
     }
 
-    public function put(string $path, array $handler, bool $auth = true): void
+    public function put(string $path, array $handler, ?string $ability = null, bool $auth = true): void
     {
-        $this->addRoute('PUT', $path, $handler, $auth);
+        $this->addRoute('PUT', $path, $handler, $ability, $auth);
     }
 
-    public function delete(string $path, array $handler, bool $auth = true): void
+    public function delete(string $path, array $handler, ?string $ability = null, bool $auth = true): void
     {
-        $this->addRoute('DELETE', $path, $handler, $auth);
+        $this->addRoute('DELETE', $path, $handler, $ability, $auth);
     }
 
-    private function addRoute(string $method, string $path, array $handler, bool $auth): void
+    private function addRoute(string $method, string $path, array $handler, ?string $ability, bool $auth): void
     {
         $this->routes[] = [
             'method'  => $method,
             'path'    => $path,
             'handler' => $handler,
+            'ability' => $ability,
             'auth'    => $auth,
         ];
     }
@@ -59,7 +60,13 @@ class Router
             }
 
             if ($route['auth']) {
-                $this->authenticate();
+                $token = $this->authenticate();
+
+                if ($route['ability'] !== null
+                    && !TokenGuard::hasAbility($token, $route['ability'])
+                ) {
+                    Response::forbidden('Token lacks required ability: ' . $route['ability']);
+                }
             }
 
             // Only named capture groups as route params
@@ -81,7 +88,7 @@ class Router
         Response::notFound();
     }
 
-    private function authenticate(): void
+    private function authenticate(): array
     {
         $plainToken = $this->request->bearerToken();
 
@@ -94,5 +101,7 @@ class Router
         if ($token === null) {
             Response::unauthorized('Invalid or expired token');
         }
+
+        return $token;
     }
 }

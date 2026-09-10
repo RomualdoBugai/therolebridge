@@ -47,6 +47,7 @@ class EspScheduleController
                 es.slot_index,
                 es.time,
                 es.template_remote_id,
+                es.template_label_id,
                 es.name_pattern,
                 es.is_active,
                 es.segment_ids_json,

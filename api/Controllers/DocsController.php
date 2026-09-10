@@ -10,6 +10,33 @@ class DocsController
             'success' => true,
             'api'     => 'Bugai API',
             'auth'    => 'Bearer token via Authorization header',
+            'authorization' => [
+                'model'        => 'Each token has an "abilities" list. A request is allowed when the token '
+                                . 'holds the ability required by the route.',
+                'grammar'      => [
+                    '*'                => 'Full access to every endpoint.',
+                    'resource:*'       => 'Every action on that resource (e.g. "leads:*").',
+                    'resource:action'  => 'That exact ability only (e.g. "leads:read").',
+                ],
+                'responses'    => [
+                    '401' => 'Missing, invalid or expired token.',
+                    '403' => 'Valid token, but it lacks the ability required by the route.',
+                ],
+                'required_abilities' => [
+                    'GET /campaigns-report' => 'campaigns:read',
+                    'GET /leads'            => 'leads:read',
+                    'POST /leads'           => 'leads:write',
+                    'GET /revenue'          => 'revenue:read',
+                    'GET /traffic-split'    => 'traffic-split:read',
+                    'PUT /traffic-split'    => 'traffic-split:write',
+                    'GET /esps'             => 'esps:read',
+                    'GET /esp-schedule'     => 'esp-schedule:read',
+                    'GET /clicks'           => 'clicks:read',
+                    'GET /lead-clicks'      => 'lead-clicks:read',
+                    'POST /tokens'          => 'tokens:write',
+                    'GET /docs'             => 'docs:read',
+                ],
+            ],
             'routes'  => [
 
                 [
@@ -156,6 +183,20 @@ class DocsController
                         'sort_dir'     => ['type' => 'string', 'enum' => ['ASC','DESC'], 'default' => 'DESC'],
                     ],
                     'returns' => 'data[], summary{total_link_clicks, total_button_clicks, conversion_rate, unique_emails, unique_campaigns, first_click, last_click}, meta{}',
+                ],
+
+                [
+                    'method'      => 'POST',
+                    'route'       => '/tokens',
+                    'description' => 'Create a new API token with a set of abilities. The plain-text token is '
+                                   . 'returned only once in the response; only its SHA-256 hash is stored.',
+                    'requires'    => 'tokens:write',
+                    'body'        => [
+                        'name'       => ['type' => 'string', 'required' => true, 'max' => 100, 'description' => 'Human-readable label'],
+                        'abilities'  => ['type' => 'array', 'required' => true, 'example' => '["leads:read","campaigns:read"]', 'description' => 'Ability strings: "*", "resource:*" or "resource:action"'],
+                        'expires_at' => ['type' => 'string', 'required' => false, 'format' => 'Y-m-d H:i:s', 'description' => 'Optional expiration; omit for a token that never expires'],
+                    ],
+                    'returns' => '201 {success, message, data{id, name, abilities, expires_at, token}} | 422 validation errors',
                 ],
 
                 [

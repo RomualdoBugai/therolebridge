@@ -36,4 +36,45 @@ class TokenGuard
 
         return $token;
     }
+
+    /**
+     * Checks whether a resolved token row is allowed to perform the given ability.
+     *
+     * Ability grammar (stored as a JSON array in api_tokens.abilities):
+     *   "*"              → full access to every endpoint
+     *   "campaigns:*"    → every action on the "campaigns" resource
+     *   "campaigns:read" → that exact ability only
+     */
+    public static function hasAbility(?array $token, string $required): bool
+    {
+        if ($token === null || $required === '') {
+            return false;
+        }
+
+        $granted = $token['abilities'] ?? null;
+
+        // Column is JSON; PDO returns it as a string.
+        if (is_string($granted)) {
+            $granted = json_decode($granted, true);
+        }
+        if (!is_array($granted)) {
+            return false;
+        }
+
+        [$resource] = explode(':', $required, 2);
+
+        foreach ($granted as $ability) {
+            if (!is_string($ability)) {
+                continue;
+            }
+            if ($ability === '*'
+                || $ability === $required
+                || $ability === $resource . ':*'
+            ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

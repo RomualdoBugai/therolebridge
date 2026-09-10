@@ -15,6 +15,7 @@ require_once __DIR__ . '/Controllers/EspController.php';
 require_once __DIR__ . '/Controllers/EspScheduleController.php';
 require_once __DIR__ . '/Controllers/ClicksController.php';
 require_once __DIR__ . '/Controllers/LeadClicksController.php';
+require_once __DIR__ . '/Controllers/TokenController.php';
 require_once __DIR__ . '/Controllers/DocsController.php';
 
 // ─── Headers ────────────────────────────────────────────────────────────────
@@ -42,16 +43,17 @@ set_exception_handler(function (Throwable $e) {
 $request = new Request();
 $router  = new Router($request);
 
-$router->get('/campaigns-report',  [CampaignController::class,    'index']);
-$router->get('/leads',             [LeadController::class,         'index']);
-$router->post('/leads',            [LeadController::class,         'store']);
-$router->get('/revenue',           [RevenueController::class,      'index']);
-$router->get('/traffic-split',     [TrafficSplitController::class, 'index']);
-$router->put('/traffic-split',     [TrafficSplitController::class, 'update']);
-$router->get('/esps',              [EspController::class,          'index']);
-$router->get('/esp-schedule',      [EspScheduleController::class,  'index']);
-$router->get('/clicks',            [ClicksController::class,       'index']);
-$router->get('/lead-clicks',       [LeadClicksController::class,   'index']);
-$router->get('/docs',              [DocsController::class,         'index']);
+$router->get('/campaigns-report',  [CampaignController::class,    'index'],  'campaigns:read');
+$router->get('/leads',             [LeadController::class,         'index'],  'leads:read');
+$router->post('/leads',            [LeadController::class,         'store'],  'leads:write');
+$router->get('/revenue',           [RevenueController::class,      'index'],  'revenue:read');
+$router->get('/traffic-split',     [TrafficSplitController::class, 'index'],  'traffic-split:read');
+$router->put('/traffic-split',     [TrafficSplitController::class, 'update'], 'traffic-split:write');
+$router->get('/esps',              [EspController::class,          'index'],  'esps:read');
+$router->get('/esp-schedule',      [EspScheduleController::class,  'index'],  'esp-schedule:read');
+$router->get('/clicks',            [ClicksController::class,       'index'],  'clicks:read');
+$router->get('/lead-clicks',       [LeadClicksController::class,   'index'],  'lead-clicks:read');
+$router->post('/tokens',           [TokenController::class,        'store'],  'tokens:write');
+$router->get('/docs',              [DocsController::class,         'index'],  'docs:read');
 
 $router->dispatch();

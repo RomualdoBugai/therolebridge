@@ -413,6 +413,47 @@
       ]
     },
     {
+      "name": "Tokens",
+      "item": [
+        {
+          "name": "Create token (requires tokens:write)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json && json.data && json.data.token) {",
+                  "  pm.environment.set('restricted_token', json.data.token);",
+                  "  console.log('Saved restricted_token for the 403 test.');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Accept",        "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"read-only-partner\",\n  \"abilities\": [\"leads:read\"],\n  \"expires_at\": null\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/tokens",
+              "host": ["{{base_url}}"],
+              "path": ["tokens"]
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "Auth",
       "item": [
         {
@@ -420,6 +461,21 @@
           "request": {
             "method": "GET",
             "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/campaigns-report",
+              "host": ["{{base_url}}"],
+              "path": ["campaigns-report"]
+            }
+          }
+        },
+        {
+          "name": "Insufficient ability (test 403)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{restricted_token}}" },
               { "key": "Accept", "value": "application/json" }
             ],
             "url": {

@@ -48,6 +48,11 @@ class Response
         self::error($message, 401);
     }
 
+    public static function forbidden(string $message = 'Forbidden'): void
+    {
+        self::error($message, 403);
+    }
+
     public static function notFound(string $message = 'Not found'): void
     {
         self::error($message, 404);
