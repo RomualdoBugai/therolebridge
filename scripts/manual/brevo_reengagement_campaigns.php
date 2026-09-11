@@ -6,7 +6,7 @@ declare(strict_types=1);
  * brevo_reengagement_campaigns.php
  *
  * Cria campanhas de Reengagement na Brevo.
- * Nome: HD {m/d/y} #{template_id} {TIME} - Reengagement
+ * Nome: {SIGLA} {m/d/y} #000 {TIME} - Reengagement
  *
  * Uso: php scripts/manual/brevo_reengagement_campaigns.php
  */
@@ -166,9 +166,9 @@ function timeToLabel(string $time): string
     return $display . $suffix;
 }
 
-function buildCampaignName(int $templateId, string $timeLabel, DateTimeImmutable $date): string
+function buildCampaignName(string $espSigla, string $timeLabel, DateTimeImmutable $date): string
 {
-    return 'HD ' . $date->format('m/d/y') . ' #' . $templateId . ' - Reengagement';
+    return $espSigla . ' ' . $date->format('m/d/y') . ' #000 ' . $timeLabel . ' - Reengagement';
 }
 
 // ==========================
@@ -192,6 +192,13 @@ function main(int $daysAhead, array $sendTimes, int $espId): void
     $espName     = (string) $esp['name'];
     $senderName  = (string) $esp['domain_name'];
     $senderEmail = (string) $esp['smtp_user'];
+
+    // Sigla do ESP a partir do name (ex.: "Brevo-PHG" -> "PHG")
+    $espParts = explode('-', $espName);
+    $espSigla = strtoupper(trim((string) end($espParts)));
+    if ($espSigla === '') {
+        $espSigla = strtoupper(trim($espName));
+    }
 
     $tz         = new DateTimeZone('America/New_York');
     $now        = new DateTimeImmutable('now', $tz);
@@ -306,7 +313,7 @@ function main(int $daysAhead, array $sendTimes, int $espId): void
             continue;
         }
 
-        $campaignName = buildCampaignName($labelId, $timeLabel, $targetDate);
+        $campaignName = buildCampaignName($espSigla, $timeLabel, $targetDate);
 
         try {
             if (brevoCampaignExistsByName($apiKey, $campaignName)) {
