@@ -379,4 +379,14 @@ tr:last-child td {
         display: block;
         /* mostra o botão de menu */
     }
+
+    /* Quick summary: mais compacto no celular */
+    .summary-compact {
+        font-size: 0.72rem;
+    }
+
+    .summary-compact th,
+    .summary-compact td {
+        padding: 6px;
+    }
 }

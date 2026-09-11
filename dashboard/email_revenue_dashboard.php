@@ -273,8 +273,8 @@ foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $cr) {
 
 $compareLabels = [
     'today'      => 'Today',
-    'last_week'  => 'Today last week',
-    'last_month' => 'Today last month',
+    'last_week'  => 'Last week',
+    'last_month' => 'Last month',
 ];
 
 $compareRows = [];
@@ -560,44 +560,24 @@ foreach ($compareDates as $key => $dateStr) {
                 Independente do filtro de período. Fonte: <code>earnings_daily</code>.
             </p>
 
-            <table>
+            <table class="summary-compact">
                 <thead>
                     <tr>
                         <th>Period</th>
-                        <th>Day</th>
-                        <th class="text-right">Monetized clicks</th>
-                        <th class="text-right">Revenue (USD)</th>
-                        <th class="text-right">EPC (USD)</th>
-                        <th class="text-right">Δ Revenue vs today</th>
+                        <th class="text-right">Clicks</th>
+                        <th class="text-right">Revenue</th>
+                        <th class="text-right">EPC</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php
-                    $todayUsd = $compareRows['today']['usd'];
-                    foreach ($compareRows as $key => $c):
-                        $deltaHtml = '<span style="color:#9ca3af;">—</span>';
-                        if ($key !== 'today') {
-                            $diff    = $todayUsd - $c['usd'];
-                            $pct     = $c['usd'] > 0 ? round(($diff / $c['usd']) * 100, 1) : null;
-                            $sign    = $diff >= 0 ? '+' : '−';
-                            $color   = $diff >= 0 ? '#16a34a' : '#dc2626';
-                            $pctText = $pct !== null ? ' (' . $sign . number_format(abs($pct), 1) . '%)' : '';
-                            $deltaHtml = '<span style="color:' . $color . ';">' . $sign . '$' . number_format(abs($diff), 2) . $pctText . '</span>';
-                        }
-                        $isTodayRow = ($key === 'today');
-                        ?>
+                    <?php foreach ($compareRows as $key => $c): ?>
                         <tr>
                             <td>
                                 <strong><?= htmlspecialchars($c['label']) ?></strong>
-                                <?php if ($isTodayRow): ?>
-                                    <span class="pill-today">Today</span>
-                                <?php endif; ?>
                             </td>
-                            <td><span class="badge-date"><?= htmlspecialchars($c['date']) ?></span></td>
                             <td class="text-right"><?= number_format($c['clicks']) ?></td>
                             <td class="text-right">$<?= number_format($c['usd'], 2) ?></td>
                             <td class="text-right">$<?= number_format($c['epc'], 4) ?></td>
-                            <td class="text-right"><?= $deltaHtml ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
