@@ -238,6 +238,62 @@ $jsEpcSeries        = json_encode($epcSeries);
 $jsExpiredSeries    = json_encode($expiredSeries);
 
 $todayStr = date('Y-m-d');
+
+// ==================================================
+// RESUMO: hoje x hoje semana passada x hoje mês passado
+// (independente do filtro de período; sempre datas fixas)
+// ==================================================
+$compareDates = [
+    'today'      => $todayStr,
+    'last_week'  => (new DateTimeImmutable($todayStr))->modify('-7 days')->format('Y-m-d'),
+    'last_month' => (new DateTimeImmutable($todayStr))->modify('-1 month')->format('Y-m-d'),
+];
+
+$sqlCompare = "
+    SELECT
+        report_date         AS day,
+        SUM(clicks)         AS day_clicks,
+        SUM(earnings_cents) AS day_earnings_cents,
+        SUM(expired_clicks) AS day_expired_clicks
+    FROM earnings_daily
+    WHERE report_date IN (:dToday, :dWeek, :dMonth)
+    GROUP BY report_date
+";
+$stmt = $pdo->prepare($sqlCompare);
+$stmt->execute([
+    ':dToday' => $compareDates['today'],
+    ':dWeek'  => $compareDates['last_week'],
+    ':dMonth' => $compareDates['last_month'],
+]);
+
+$compareByDate = [];
+foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $cr) {
+    $compareByDate[(string)$cr['day']] = $cr;
+}
+
+$compareLabels = [
+    'today'      => 'Today',
+    'last_week'  => 'Today last week',
+    'last_month' => 'Today last month',
+];
+
+$compareRows = [];
+foreach ($compareDates as $key => $dateStr) {
+    $row     = $compareByDate[$dateStr] ?? null;
+    $clicks  = (int)($row['day_clicks'] ?? 0);
+    $cents   = (int)($row['day_earnings_cents'] ?? 0);
+    $expired = (int)($row['day_expired_clicks'] ?? 0);
+    $usd     = $cents / 100.0;
+
+    $compareRows[$key] = [
+        'label'   => $compareLabels[$key],
+        'date'    => $dateStr,
+        'clicks'  => $clicks,
+        'expired' => $expired,
+        'usd'     => $usd,
+        'epc'     => $clicks > 0 ? round($usd / $clicks, 4) : 0.0,
+    ];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -492,6 +548,58 @@ $todayStr = date('Y-m-d');
                             </td>
                         </tr>
                     <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Resumo rápido: hoje x semana passada x mês passado -->
+        <div class="table-wrapper" style="margin-top: 24px;">
+            <h2 style="margin: 0 0 8px 0; font-size: 1rem;">Quick summary — today vs last week vs last month</h2>
+            <p style="margin-top: 0; font-size: 0.8rem; color: #6b7280;">
+                Hoje (<?= htmlspecialchars($todayStr) ?>) comparado com o mesmo dia da semana passada e do mês passado.<br>
+                Independente do filtro de período. Fonte: <code>earnings_daily</code>.
+            </p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Period</th>
+                        <th>Day</th>
+                        <th class="text-right">Monetized clicks</th>
+                        <th class="text-right">Revenue (USD)</th>
+                        <th class="text-right">EPC (USD)</th>
+                        <th class="text-right">Δ Revenue vs today</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    $todayUsd = $compareRows['today']['usd'];
+                    foreach ($compareRows as $key => $c):
+                        $deltaHtml = '<span style="color:#9ca3af;">—</span>';
+                        if ($key !== 'today') {
+                            $diff    = $todayUsd - $c['usd'];
+                            $pct     = $c['usd'] > 0 ? round(($diff / $c['usd']) * 100, 1) : null;
+                            $sign    = $diff >= 0 ? '+' : '−';
+                            $color   = $diff >= 0 ? '#16a34a' : '#dc2626';
+                            $pctText = $pct !== null ? ' (' . $sign . number_format(abs($pct), 1) . '%)' : '';
+                            $deltaHtml = '<span style="color:' . $color . ';">' . $sign . '$' . number_format(abs($diff), 2) . $pctText . '</span>';
+                        }
+                        $isTodayRow = ($key === 'today');
+                        ?>
+                        <tr>
+                            <td>
+                                <strong><?= htmlspecialchars($c['label']) ?></strong>
+                                <?php if ($isTodayRow): ?>
+                                    <span class="pill-today">Today</span>
+                                <?php endif; ?>
+                            </td>
+                            <td><span class="badge-date"><?= htmlspecialchars($c['date']) ?></span></td>
+                            <td class="text-right"><?= number_format($c['clicks']) ?></td>
+                            <td class="text-right">$<?= number_format($c['usd'], 2) ?></td>
+                            <td class="text-right">$<?= number_format($c['epc'], 4) ?></td>
+                            <td class="text-right"><?= $deltaHtml ?></td>
+                        </tr>
+                    <?php endforeach; ?>
                 </tbody>
             </table>
         </div>
